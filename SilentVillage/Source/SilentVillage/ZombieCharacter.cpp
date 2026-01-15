@@ -1,8 +1,11 @@
 #include "ZombieCharacter.h"
+#include "ZombieAIController.h"
+
 #include "HealthComponentNew.h"
 
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
+
 
 // Sets default values
 AZombieCharacter::AZombieCharacter()
@@ -12,6 +15,10 @@ AZombieCharacter::AZombieCharacter()
 
 	Health = CreateDefaultSubobject<UHealthComponentNew>(TEXT("HealthComponentNew"));
 	Health->MaxHealth = 100.f;
+
+    AIControllerClass = AZombieAIController::StaticClass();
+    AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
+
 
 }
 

@@ -6,6 +6,7 @@
 
 class UHealthComponentNew;
 
+
 UCLASS()
 class SILENTVILLAGE_API AZombieCharacter : public ACharacter
 {
