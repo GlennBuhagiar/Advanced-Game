@@ -44,6 +44,9 @@ public:
 	UPROPERTY(BlueprintReadOnly, Category = "Zombie", meta = (AllowPrivateAccess = "true"))
 	bool bIsDead = false;
 
+	UPROPERTY(EditAnywhere, Category = "Zombie|Rewards")
+	TSubclassOf<class ARewardPickUp> RewardClass;
+
 	bool bCanAttack = true;
 
 protected:

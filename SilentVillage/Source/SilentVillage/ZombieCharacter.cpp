@@ -9,6 +9,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "TimerManager.h"
 #include "DrawDebugHelpers.h"
+#include "RewardPickUp.h"
 
 
 
@@ -57,6 +58,25 @@ void AZombieCharacter::HandleDeath()
 {
 	if (bIsDead) return;
 	bIsDead = true;
+    
+    //Spawning Reward
+    if (RewardClass)
+    {
+        const FVector SpawnLoc = GetActorLocation() + FVector(0, 0, 40.f);
+
+        FActorSpawnParameters Params;
+        Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+        ARewardPickUp* Spawned = GetWorld()->SpawnActor<ARewardPickUp>(RewardClass, SpawnLoc, FRotator::ZeroRotator, Params);
+
+        UE_LOG(LogTemp, Warning, TEXT("Reward spawn attempt: %s"),
+            Spawned ? TEXT("SUCCESS") : TEXT("FAILED"));
+    }
+    else
+    {
+        UE_LOG(LogTemp, Warning, TEXT("RewardClass is NULL on this zombie!"));
+    }
+
 
 	// Stopping Zombie
 	if (AAIController* AIC = Cast<AAIController>(GetController()))
@@ -143,13 +163,7 @@ void AZombieCharacter::DealDamage()
     if (FacingDot < 0.3f) return;
 
     // Apply damage to player
-    UGameplayStatics::ApplyDamage(
-        PlayerPawn,
-        AttackDamage,
-        GetController(),
-        this,
-        nullptr
-    );
+    UGameplayStatics::ApplyDamage(PlayerPawn, AttackDamage, GetController(), this, nullptr);
 
     //DrawDebugSphere(GetWorld(), GetActorLocation() + GetActorForwardVector()*80.f, AttackRadius, 16, FColor::Red, false, 0.2f);
 }
@@ -162,15 +176,7 @@ void AZombieCharacter::OnAttackMontageEnded(UAnimMontage* Montage, bool bInterru
     const float Cooldown = FMath::Max(AttackCooldown, 0.1f);
 
     GetWorldTimerManager().ClearTimer(AttackCooldownHandle);
-    GetWorldTimerManager().SetTimer(
-        AttackCooldownHandle,
-        [this]()
-        {
-            bCanAttack = true;
-        },
-        Cooldown,
-        false
-    );
+    GetWorldTimerManager().SetTimer( AttackCooldownHandle,[this](){bCanAttack = true;}, Cooldown, false);
 }
 
 
