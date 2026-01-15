@@ -5,10 +5,7 @@
 #include "Navigation/PathFollowingComponent.h"
 #include "ZombieAIController.generated.h"
 
-
-
 class AAIPatrolPoint;
-
 
 UENUM()
 enum class EZombieState : uint8
@@ -21,7 +18,7 @@ enum class EZombieState : uint8
 UCLASS()
 class SILENTVILLAGE_API AZombieAIController : public AAIController
 {
-	GENERATED_BODY()
+    GENERATED_BODY()
 
 public:
     AZombieAIController();
@@ -31,33 +28,38 @@ protected:
     virtual void Tick(float DeltaSeconds) override;
     virtual void OnMoveCompleted(FAIRequestID RequestID, const FPathFollowingResult& Result) override;
 
-
 private:
+    // Patrol
     UPROPERTY(EditAnywhere, Category = "AI|Patrol")
-    float PatrolAcceptanceRadius = 1000.f;
+    float PatrolAcceptanceRadius = 80.f;
 
+    // Sensing
     UPROPERTY(EditAnywhere, Category = "AI|Sense")
     float DetectRange = 1200.f;
 
     UPROPERTY(EditAnywhere, Category = "AI|Sense")
     float LoseRange = 2200.f;
 
+    // Combat
     UPROPERTY(EditAnywhere, Category = "AI|Combat")
-    float AttackRange = 100.f;
+    float AttackEnterRange = 180.f;
 
     UPROPERTY(EditAnywhere, Category = "AI|Combat")
-    float AttackInterval = 1.0f;
+    float AttackExitRange = 260.f;
 
-    UPROPERTY(EditAnywhere, Category = "AI|Combat")
-    float AttackDamage = 20.f;
-
+    // Movement
     UPROPERTY(EditAnywhere, Category = "AI|Movement")
     float PatrolSpeed = 90.f;
 
     UPROPERTY(EditAnywhere, Category = "AI|Movement")
     float ChaseSpeed = 260.f;
-    
+
+    UPROPERTY(EditAnywhere, Category = "AI|Movement")
+    float AttackSpeed = 0.f;
+
+    // Runtime
     bool bHasPatrolMove = false;
+    int32 PatrolIndex = 0;
 
     EZombieState State = EZombieState::Patrol;
 
@@ -70,20 +72,14 @@ private:
     UPROPERTY()
     TArray<AAIPatrolPoint*> PatrolPoints;
 
-    int32 PatrolIndex = 0;
-
-    FTimerHandle AttackTimer;
-
+private:
     void GatherPatrolPoints();
     void SetState(EZombieState NewState);
 
     void DoPatrol();
     void DoChase();
-    void StartAttack();
-    void StopAttack();
-    void AttackTick();
+    void DoAttack();
 
     bool CanSeePlayer() const;
     float DistToPlayer() const;
-	
 };

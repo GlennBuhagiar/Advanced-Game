@@ -1,11 +1,13 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Animation/AnimMontage.h"
+#include "Animation/AnimInstance.h"
 #include "GameFramework/Character.h"
 #include "ZombieCharacter.generated.h"
 
 class UHealthComponentNew;
-
+class UAnimMontage;
 
 UCLASS()
 class SILENTVILLAGE_API AZombieCharacter : public ACharacter
@@ -15,6 +17,34 @@ class SILENTVILLAGE_API AZombieCharacter : public ACharacter
 public:
 	// Sets default values for this character's properties
 	AZombieCharacter();
+
+	void StartAttack();
+
+	UFUNCTION(BlueprintCallable, Category = "Combat")
+	void DealDamage();
+
+	UFUNCTION()
+	void OnAttackMontageEnded(UAnimMontage* Montage, bool bInterrupted);
+
+	UPROPERTY(EditAnywhere, Category = "Combat")
+	float AttackDamage = 10.f;
+
+	UPROPERTY(EditAnywhere, Category = "Combat")
+	float AttackRadius = 120.f;
+
+	UPROPERTY(EditAnywhere, Category = "Combat")
+	float AttackRange = 180.f;
+
+	UPROPERTY(EditAnywhere, Category = "Combat")
+	float AttackCooldown = .05f;
+
+	UPROPERTY(EditAnywhere, Category = "Combat|Animation")
+	UAnimMontage* AttackMontage = nullptr;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Zombie", meta = (AllowPrivateAccess = "true"))
+	bool bIsDead = false;
+
+	bool bCanAttack = true;
 
 protected:
 	// Called when the game starts or when spawned
@@ -27,8 +57,10 @@ private:
 	UPROPERTY(VisibleAnywhere, Category = "Components")
 	UHealthComponentNew* Health;
 
-	UPROPERTY(BlueprintReadOnly, Category = "Zombie", meta = (AllowPrivateAccess = "true"))
-	bool bIsDead = false;
+	bool bIsAttacking = false;
+	FTimerHandle AttackCooldownHandle;
+
+	void ResetAttack();
 
 	UFUNCTION()
 	void HandleDeath();

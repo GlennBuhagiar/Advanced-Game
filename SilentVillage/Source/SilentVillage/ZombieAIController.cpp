@@ -1,14 +1,10 @@
 #include "ZombieAIController.h"
 #include "AIPatrolPoint.h"
+#include "ZombieCharacter.h"
 
 #include "Kismet/GameplayStatics.h"
 #include "GameFramework/Character.h"
-#include "TimerManager.h"
-#include "NavigationSystem.h"
-
-#include "GameFramework/Character.h"
 #include "GameFramework/CharacterMovementComponent.h"
-
 
 AZombieAIController::AZombieAIController()
 {
@@ -18,8 +14,8 @@ AZombieAIController::AZombieAIController()
 void AZombieAIController::OnPossess(APawn* InPawn)
 {
     Super::OnPossess(InPawn);
-    ControlledPawn = InPawn;
 
+    ControlledPawn = InPawn;
     PlayerChar = Cast<ACharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
 
     GatherPatrolPoints();
@@ -32,37 +28,46 @@ void AZombieAIController::Tick(float DeltaSeconds)
 
     if (!PlayerChar)
     {
-        PlayerChar = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0);
+        PlayerChar = Cast<ACharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
     }
 
     if (!PlayerChar || !ControlledPawn) return;
 
     const float D = DistToPlayer();
 
-    // State switching
     if (State == EZombieState::Patrol)
     {
         if (D <= DetectRange && CanSeePlayer())
+        {
             SetState(EZombieState::Chase);
+        }
     }
     else if (State == EZombieState::Chase)
     {
-        if (D <= AttackRange)
+        if (D <= AttackEnterRange)
+        {
             SetState(EZombieState::Attack);
+        }
         else if (D > LoseRange)
+        {
             SetState(EZombieState::Patrol);
+        }
     }
     else if (State == EZombieState::Attack)
     {
-        if (D > AttackRange)
+        if (D > AttackExitRange)
+        {
             SetState(EZombieState::Chase);
+        }
         else if (D > LoseRange)
+        {
             SetState(EZombieState::Patrol);
+        }
     }
 
-    // State actions
     if (State == EZombieState::Patrol) DoPatrol();
     else if (State == EZombieState::Chase) DoChase();
+    else if (State == EZombieState::Attack) DoAttack();
 }
 
 void AZombieAIController::GatherPatrolPoints()
@@ -71,56 +76,53 @@ void AZombieAIController::GatherPatrolPoints()
 
     TArray<AActor*> Found;
     UGameplayStatics::GetAllActorsOfClass(GetWorld(), AAIPatrolPoint::StaticClass(), Found);
+
     for (AActor* A : Found)
     {
         if (AAIPatrolPoint* P = Cast<AAIPatrolPoint>(A))
+        {
             PatrolPoints.Add(P);
+        }
     }
 
-    // Randomising so the zmobies don't all walk same route
+    // optional: stable order
     PatrolPoints.Sort([](const AAIPatrolPoint& A, const AAIPatrolPoint& B)
         {
             return A.GetName() < B.GetName();
         });
 
     PatrolIndex = 0;
+    bHasPatrolMove = false;
 }
 
 void AZombieAIController::SetState(EZombieState NewState)
 {
     if (State == NewState) return;
 
-    // Exit old state
-    if (State == EZombieState::Attack)
-        StopAttack();
-
     State = NewState;
 
-    // Entre new state
-    if (State == EZombieState::Attack)
-        StartAttack();
-
+    // Set spedes
     if (ACharacter* Z = Cast<ACharacter>(ControlledPawn))
     {
         if (UCharacterMovementComponent* Move = Z->GetCharacterMovement())
         {
             if (NewState == EZombieState::Patrol) Move->MaxWalkSpeed = PatrolSpeed;
             if (NewState == EZombieState::Chase)  Move->MaxWalkSpeed = ChaseSpeed;
-            if (NewState == EZombieState::Attack) Move->MaxWalkSpeed = 0.f; // optional
+            if (NewState == EZombieState::Attack) Move->MaxWalkSpeed = AttackSpeed;
         }
     }
 
+    // Reset patrol move gaet when returning to patrol
     if (NewState == EZombieState::Patrol)
     {
-        bHasPatrolMove = false; // allow a new MoveTo
+        bHasPatrolMove = false;
     }
 }
 
 void AZombieAIController::DoPatrol()
 {
     if (PatrolPoints.Num() == 0) return;
-
-    if (bHasPatrolMove) return; // to not spam MoveTo every tick
+    if (bHasPatrolMove) return;
 
     AAIPatrolPoint* Target = PatrolPoints.IsValidIndex(PatrolIndex) ? PatrolPoints[PatrolIndex] : nullptr;
     if (!Target) return;
@@ -131,33 +133,25 @@ void AZombieAIController::DoPatrol()
 
 void AZombieAIController::DoChase()
 {
-    MoveToActor(PlayerChar, AttackRange - 20.f);
+    // Chase close enough so attack tirggers consistently
+    MoveToActor(PlayerChar, 30.f);
 }
 
-void AZombieAIController::StartAttack()
+void AZombieAIController::DoAttack()
 {
+    // Stops sliding while attacking
     StopMovement();
-    GetWorld()->GetTimerManager().SetTimer(AttackTimer, this, &AZombieAIController::AttackTick, AttackInterval, true, 0.f);
-}
 
-void AZombieAIController::StopAttack()
-{
-    GetWorld()->GetTimerManager().ClearTimer(AttackTimer);
-}
-
-void AZombieAIController::AttackTick()
-{
-    if (!PlayerChar || !ControlledPawn) return;
-
-    const float D = DistToPlayer();
-    if (D > AttackRange) return;
-
-    UGameplayStatics::ApplyDamage(PlayerChar, AttackDamage, this, ControlledPawn, UDamageType::StaticClass());
+    // Asks zombie to attack; zombie handles cooldown + montgae + notify-damage
+    if (AZombieCharacter* Z = Cast<AZombieCharacter>(ControlledPawn))
+    {
+        Z->StartAttack();
+    }
 }
 
 float AZombieAIController::DistToPlayer() const
 {
-    if (!PlayerChar || !ControlledPawn) return FLT_MAX; //basically NotNullReference
+    if (!PlayerChar || !ControlledPawn) return FLT_MAX;
     return FVector::Dist(PlayerChar->GetActorLocation(), ControlledPawn->GetActorLocation());
 }
 
@@ -174,7 +168,6 @@ bool AZombieAIController::CanSeePlayer() const
 
     const bool bHit = GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_Visibility, Params);
 
-    // If we didn't hit anything, or we hit the player, we can "see" them
     return (!bHit) || (Hit.GetActor() == PlayerChar);
 }
 
@@ -186,5 +179,8 @@ void AZombieAIController::OnMoveCompleted(FAIRequestID RequestID, const FPathFol
 
     bHasPatrolMove = false;
 
-    PatrolIndex = (PatrolIndex + 1) % PatrolPoints.Num();
+    if (PatrolPoints.Num() > 0)
+    {
+        PatrolIndex = (PatrolIndex + 1) % PatrolPoints.Num();
+    }
 }
