@@ -1,11 +1,11 @@
 #include "ZombieCharacter.h"
 #include "ZombieAIController.h"
-
 #include "HealthComponentNew.h"
 
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
-
+#include "AIController.h"
+#include "BrainComponent.h"
 
 // Sets default values
 AZombieCharacter::AZombieCharacter()
@@ -28,7 +28,10 @@ void AZombieCharacter::BeginPlay()
 	Super::BeginPlay();
 
 	// Bind to delegate
-	Health->OnDeath.AddDynamic(this, &AZombieCharacter::OnZombieDied);
+    if (Health)
+    {
+        Health->OnDeath.AddDynamic(this, &AZombieCharacter::HandleDeath);
+    }
 	
 }
 
@@ -45,17 +48,40 @@ float AZombieCharacter::TakeDamage(float DamageAmount, FDamageEvent const& Damag
     return ActualDamage;
 }
 
-void AZombieCharacter::OnZombieDied()
+void AZombieCharacter::HandleDeath()
 {
-    Die();
+	if (bIsDead) return;
+	bIsDead = true;
+
+	// Stopping Zombie
+	if (AAIController* AIC = Cast<AAIController>(GetController()))
+	{
+		if (AIC->BrainComponent)
+		{
+			AIC->BrainComponent->StopLogic(TEXT("Dead"));
+		}
+		AIC->StopMovement();
+	}
+
+	//To stop zombie from turning (removing all movement)
+	bUseControllerRotationYaw = false;
+	GetCharacterMovement()->bOrientRotationToMovement = false;
+
+	// If AI is focusing the player, clear it
+	if (AAIController* AIC = Cast<AAIController>(GetController()))
+	{
+		AIC->ClearFocus(EAIFocusPriority::Gameplay);
+		AIC->SetFocus(nullptr);
+	}
+
+	GetCharacterMovement()->DisableMovement();
+
+	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	// AnimBP will handle death animatino
+	SetLifeSpan(6.f);
 }
 
-void AZombieCharacter::Die()
-{
-    // Stopping movement nad disable collisions
-    GetCharacterMovement()->DisableMovement();
-    GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
-    SetLifeSpan(4.f);
-}
 

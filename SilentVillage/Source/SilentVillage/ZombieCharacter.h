@@ -27,9 +27,9 @@ private:
 	UPROPERTY(VisibleAnywhere, Category = "Components")
 	UHealthComponentNew* Health;
 
+	UPROPERTY(BlueprintReadOnly, Category = "Zombie", meta = (AllowPrivateAccess = "true"))
+	bool bIsDead = false;
+
 	UFUNCTION()
-	void OnZombieDied();
-
-	void Die();
-
+	void HandleDeath();
 };
