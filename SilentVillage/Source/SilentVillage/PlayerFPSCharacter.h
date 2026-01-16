@@ -43,8 +43,19 @@ private:
     UPROPERTY(EditDefaultsOnly, Category = "Weapon")
     float FireCooldown = 0.2f;
 
+    UPROPERTY(EditAnywhere, Category = "UI")
+    TSubclassOf<class UPlayerGameMenuWidget> MenuWidgetClass;
+
+    UPROPERTY()
+    UPlayerGameMenuWidget* MenuWidget;
+
+    bool bMenuOpen = false;
+
     bool bCanFire = true;
     FTimerHandle FireCooldownHandle;
 
     void ResetFire();
+
+    void ToggleMenu();
+    void UpdateMenuUI();
 };

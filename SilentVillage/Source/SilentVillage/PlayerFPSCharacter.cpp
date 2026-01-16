@@ -7,6 +7,11 @@
 #include "TimerManager.h"
 #include "Components/CapsuleComponent.h"
 
+#include "PlayerGameMenuWidget.h"
+#include "Blueprint/UserWidget.h"
+#include "Kismet/GameplayStatics.h"
+
+
 // Sets default values
 APlayerFPSCharacter::APlayerFPSCharacter()
 {
@@ -43,6 +48,8 @@ void APlayerFPSCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInput
     PlayerInputComponent->BindAxis("LookUp", this, &APlayerFPSCharacter::LookUp);
 
     PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &APlayerFPSCharacter::Fire);
+
+    PlayerInputComponent->BindAction("ToggleMenu", IE_Pressed, this, &APlayerFPSCharacter::ToggleMenu);
 
 }
 
@@ -92,4 +99,51 @@ void APlayerFPSCharacter::Fire()
 void APlayerFPSCharacter::ResetFire()
 {
     bCanFire = true;
+}
+
+void APlayerFPSCharacter::ToggleMenu()
+{
+    if (!MenuWidget && MenuWidgetClass)
+    {
+        MenuWidget = CreateWidget<UPlayerGameMenuWidget>(GetWorld(), MenuWidgetClass);
+    }
+
+    if (!MenuWidget) return;
+
+    bMenuOpen = !bMenuOpen;
+
+    if (bMenuOpen)
+    {
+        MenuWidget->AddToViewport();
+        UpdateMenuUI();
+
+        if (APlayerController* PC = Cast<APlayerController>(GetController()))
+        {
+            PC->SetShowMouseCursor(true);
+            PC->SetInputMode(FInputModeUIOnly());
+        }
+    }
+    else
+    {
+        MenuWidget->RemoveFromParent();
+
+        if (APlayerController* PC = Cast<APlayerController>(GetController()))
+        {
+            PC->SetShowMouseCursor(false);
+            PC->SetInputMode(FInputModeGameOnly());
+        }
+    }
+}
+
+void APlayerFPSCharacter::UpdateMenuUI()
+{
+    if (!MenuWidget) return;
+
+    // assuming your player has a HealthComponentNew called Health
+    if (Health)
+    {
+        MenuWidget->SetHealth(Health->CurrentHealth, Health->MaxHealth);
+    }
+
+    MenuWidget->SetObjectiveText(FText::FromString(TEXT("Objective: Collect 5 items and escape")));
 }
