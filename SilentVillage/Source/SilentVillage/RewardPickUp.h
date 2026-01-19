@@ -13,7 +13,8 @@ enum class ERewardType : uint8
 {
 	Ammo,
 	Health,
-	Collectible
+	Collectible,
+    Ability
 };
 
 struct FHitResult;
@@ -39,6 +40,13 @@ protected:
 
     UPROPERTY(EditAnywhere, Category = "Reward")
     int32 Amount = 1;
+
+    UPROPERTY(EditAnywhere, Category = "Reward|Ability")
+    float AbilityDuration = 5.f;
+
+    UPROPERTY(EditAnywhere, Category = "Reward|Ability")
+    float SpeedMultiplier = 1.5f;
+
 
     UFUNCTION()
     void OnOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,

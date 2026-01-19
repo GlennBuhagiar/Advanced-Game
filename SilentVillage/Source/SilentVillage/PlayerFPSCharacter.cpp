@@ -34,6 +34,7 @@ APlayerFPSCharacter::APlayerFPSCharacter()
 void APlayerFPSCharacter::BeginPlay()
 {
 	Super::BeginPlay();	
+    BaseWalkSpeed = GetCharacterMovement()->MaxWalkSpeed;
 }
 
 // Called to bind functionality to input
@@ -181,4 +182,43 @@ float APlayerFPSCharacter::TakeDamage(float DamageAmount, FDamageEvent const& Da
     }
 
     return UsedDamage;
+}
+
+void APlayerFPSCharacter::ActivateSpeedBoost(float Multiplier, float Duration)
+{
+    if (Multiplier <= 0.f) return;
+
+    bSpeedBoostActive = true;
+    SpeedBoostMultiplier = Multiplier;
+
+    GetCharacterMovement()->MaxWalkSpeed = BaseWalkSpeed * SpeedBoostMultiplier;
+
+    GetWorldTimerManager().ClearTimer(AbilityTimerHandle);
+    GetWorldTimerManager().SetTimer(
+        AbilityTimerHandle,
+        this,
+        &APlayerFPSCharacter::EndSpeedBoost,
+        Duration,
+        false
+    );
+
+    UpdateMenuUI();
+}
+
+void APlayerFPSCharacter::EndSpeedBoost()
+{
+    bSpeedBoostActive = false;
+    SpeedBoostMultiplier = 1.0f;
+
+    GetCharacterMovement()->MaxWalkSpeed = BaseWalkSpeed;
+
+    UpdateMenuUI();
+}
+
+FText APlayerFPSCharacter::GetActiveAbilityText() const
+{
+    if (bSpeedBoostActive)
+        return FText::FromString(TEXT("Speed Boost"));
+
+    return FText::FromString(TEXT("None"));
 }

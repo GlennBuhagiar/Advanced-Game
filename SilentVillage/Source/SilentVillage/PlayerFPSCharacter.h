@@ -17,6 +17,12 @@ class SILENTVILLAGE_API APlayerFPSCharacter : public ACharacter
 public:
     APlayerFPSCharacter();
 
+    UFUNCTION(BlueprintCallable, Category = "Ability")
+    void ActivateSpeedBoost(float Multiplier, float Duration);
+
+    UFUNCTION(BlueprintCallable, Category = "Ability")
+    FText GetActiveAbilityText() const;
+
 protected:
     virtual void BeginPlay() override;
     virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
@@ -49,6 +55,13 @@ private:
     UPROPERTY()
     UPlayerGameMenuWidget* MenuWidget = nullptr;
 
+    float BaseWalkSpeed = 0.f;
+
+    bool bSpeedBoostActive = false;
+    float SpeedBoostMultiplier = 1.0f;
+
+    FTimerHandle AbilityTimerHandle;
+
 private:
 
     void MoveForward(float Value);
@@ -61,4 +74,6 @@ private:
 
     void ToggleMenu();
     void UpdateMenuUI();
+
+    void EndSpeedBoost();
 };

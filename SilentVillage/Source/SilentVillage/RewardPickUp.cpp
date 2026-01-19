@@ -2,6 +2,7 @@
 #include "Components/SphereComponent.h"
 #include "GameFramework/Character.h"
 #include "HealthComponentNew.h"
+#include "PlayerFPSCharacter.h"
 #include "Kismet/GameplayStatics.h"
 
 
@@ -32,6 +33,7 @@ void ARewardPickUp::OnOverlap(UPrimitiveComponent* OverlappedComp, AActor* Other
     if (OtherActor != PlayerPawn) return;
 
     UHealthComponentNew* HealthComp = PlayerPawn->FindComponentByClass<UHealthComponentNew>();
+    APlayerFPSCharacter* Player = Cast<APlayerFPSCharacter>(PlayerPawn);
 
     switch (RewardType)
     {
@@ -43,6 +45,14 @@ void ARewardPickUp::OnOverlap(UPrimitiveComponent* OverlappedComp, AActor* Other
         }
         break;
 
+    case ERewardType::Ability:
+        if (Player)
+        {
+            Player->ActivateSpeedBoost(SpeedMultiplier, AbilityDuration);
+            UE_LOG(LogTemp, Warning, TEXT("Ability picked up: Speed Boost"));
+        }
+        break;
+
     case ERewardType::Ammo:
         //Maybe add later on
         break;
@@ -50,6 +60,7 @@ void ARewardPickUp::OnOverlap(UPrimitiveComponent* OverlappedComp, AActor* Other
     case ERewardType::Collectible:
         //Maybe add later on
         break;
+
     }
 
     Destroy();
