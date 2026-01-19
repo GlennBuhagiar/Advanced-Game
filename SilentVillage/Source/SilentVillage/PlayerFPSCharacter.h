@@ -6,6 +6,7 @@
 
 class UCameraComponent;
 class UHealthComponentNew;
+class UPlayerGameMenuWidget;
 class APlayerProjectile;
 
 UCLASS()
@@ -18,14 +19,10 @@ public:
 
 protected:
     virtual void BeginPlay() override;
-    virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+    virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
 
-    void MoveForward(float Value);
-    void MoveRight(float Value);
-    void Turn(float Value);
-    void LookUp(float Value);
-
-    void Fire();
+    virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent,
+        class AController* EventInstigator, AActor* DamageCauser) override;
 
 private:
     UPROPERTY(VisibleAnywhere, Category = "Components")
@@ -34,26 +31,32 @@ private:
     UPROPERTY(VisibleAnywhere, Category = "Components")
     UHealthComponentNew* Health;
 
-    UPROPERTY(EditDefaultsOnly, Category = "Weapon")
+    UPROPERTY(EditAnywhere, Category = "Combat")
     TSubclassOf<APlayerProjectile> ProjectileClass;
 
-    UPROPERTY(EditDefaultsOnly, Category = "Weapon")
-    float MuzzleDistance = 120.f;
+    UPROPERTY(EditAnywhere, Category = "Combat")
+    float MuzzleDistance = 100.f;
 
-    UPROPERTY(EditDefaultsOnly, Category = "Weapon")
+    UPROPERTY(EditAnywhere, Category = "Combat")
     float FireCooldown = 0.2f;
-
-    UPROPERTY(EditAnywhere, Category = "UI")
-    TSubclassOf<class UPlayerGameMenuWidget> MenuWidgetClass;
-
-    UPROPERTY()
-    UPlayerGameMenuWidget* MenuWidget;
-
-    bool bMenuOpen = false;
 
     bool bCanFire = true;
     FTimerHandle FireCooldownHandle;
 
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
+    TSubclassOf<UPlayerGameMenuWidget> MenuWidgetClass;
+
+    UPROPERTY()
+    UPlayerGameMenuWidget* MenuWidget = nullptr;
+
+private:
+
+    void MoveForward(float Value);
+    void MoveRight(float Value);
+    void Turn(float Value);
+    void LookUp(float Value);
+
+    void Fire();
     void ResetFire();
 
     void ToggleMenu();

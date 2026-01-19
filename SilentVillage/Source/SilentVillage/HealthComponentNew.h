@@ -2,11 +2,9 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
-#include "UObject/ScriptDelegates.h"
 #include "HealthComponentNew.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnDeath);
-
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class SILENTVILLAGE_API UHealthComponentNew : public UActorComponent
@@ -24,7 +22,6 @@ public:
 
     UFUNCTION(BlueprintCallable, Category = "Health")
     void TakeDamageSimple(float DamageAmount);
-
 
     UFUNCTION(BlueprintCallable, Category = "Health")
     void Heal(float HealAmount);

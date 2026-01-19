@@ -157,14 +157,12 @@ void AZombieCharacter::DealDamage()
     const float Dist = FVector::Dist(PlayerPawn->GetActorLocation(), GetActorLocation());
     if (Dist > AttackRange) return;
 
-    // Optional: angle check so it only hits in front
     const FVector ToPlayer = (PlayerPawn->GetActorLocation() - GetActorLocation()).GetSafeNormal();
     const float FacingDot = FVector::DotProduct(GetActorForwardVector(), ToPlayer);
     if (FacingDot < 0.3f) return;
 
     // Apply damage to player
     UGameplayStatics::ApplyDamage(PlayerPawn, AttackDamage, GetController(), this, nullptr);
-
     //DrawDebugSphere(GetWorld(), GetActorLocation() + GetActorForwardVector()*80.f, AttackRadius, 16, FColor::Red, false, 0.2f);
 }
 

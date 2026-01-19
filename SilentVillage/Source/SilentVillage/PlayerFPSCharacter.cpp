@@ -33,8 +33,7 @@ APlayerFPSCharacter::APlayerFPSCharacter()
 // Called when the game starts or when spawned
 void APlayerFPSCharacter::BeginPlay()
 {
-	Super::BeginPlay();
-	
+	Super::BeginPlay();	
 }
 
 // Called to bind functionality to input
@@ -106,34 +105,45 @@ void APlayerFPSCharacter::ToggleMenu()
     if (!MenuWidget && MenuWidgetClass)
     {
         MenuWidget = CreateWidget<UPlayerGameMenuWidget>(GetWorld(), MenuWidgetClass);
+        UpdateMenuUI();
     }
 
     if (!MenuWidget) return;
 
-    bMenuOpen = !bMenuOpen;
+    APlayerController* PC = Cast<APlayerController>(GetController());
+    if (!PC) return;
 
-    if (bMenuOpen)
-    {
-        MenuWidget->AddToViewport();
-        UpdateMenuUI();
-
-        if (APlayerController* PC = Cast<APlayerController>(GetController()))
-        {
-            PC->SetShowMouseCursor(true);
-            PC->SetInputMode(FInputModeUIOnly());
-        }
-    }
-    else
+    // CLOSE menu
+    if (MenuWidget->IsInViewport())
     {
         MenuWidget->RemoveFromParent();
 
-        if (APlayerController* PC = Cast<APlayerController>(GetController()))
-        {
-            PC->SetShowMouseCursor(false);
-            PC->SetInputMode(FInputModeGameOnly());
-        }
+        PC->SetInputMode(FInputModeGameOnly());
+        PC->bShowMouseCursor = false;
+
+        PC->SetIgnoreMoveInput(false);
+        PC->SetIgnoreLookInput(false);
+
+        return;
     }
+
+    // OPEN menu
+    MenuWidget->AddToViewport();
+    UpdateMenuUI();
+
+    FInputModeGameAndUI InputMode;
+    InputMode.SetHideCursorDuringCapture(true);
+    InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::LockAlways);
+
+    PC->SetInputMode(InputMode);
+    PC->bShowMouseCursor = false;
+
+    //Disable Player Controller
+    PC->SetIgnoreMoveInput(true);
+    PC->SetIgnoreLookInput(true);
 }
+
+
 
 void APlayerFPSCharacter::UpdateMenuUI()
 {
@@ -146,4 +156,29 @@ void APlayerFPSCharacter::UpdateMenuUI()
     }
 
     MenuWidget->SetObjectiveText(FText::FromString(TEXT("Objective: Collect 5 items and escape")));
+}
+
+float APlayerFPSCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent,
+    AController* EventInstigator, AActor* DamageCauser)
+{
+    const float ActualDamage = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
+
+    const float UsedDamage = (ActualDamage > 0.f) ? ActualDamage : DamageAmount;
+
+    if (Health && UsedDamage > 0.f && Health->CurrentHealth > 0.f)
+    {
+        Health->TakeDamageSimple(UsedDamage);
+        if (MenuWidget && MenuWidget->IsInViewport())
+        {
+            UpdateMenuUI();
+        }
+        UE_LOG(LogTemp, Warning, TEXT("PLAYER DAMAGED: %.1f | HP now %.1f"),
+            UsedDamage, Health->CurrentHealth);
+    }
+    else
+    {
+        UE_LOG(LogTemp, Warning, TEXT("PLAYER TakeDamage fired but Health missing or damage=0"));
+    }
+
+    return UsedDamage;
 }
