@@ -10,6 +10,9 @@
 #include "PlayerGameMenuWidget.h"
 #include "Blueprint/UserWidget.h"
 #include "Kismet/GameplayStatics.h"
+#include "SilentVillageGameMode.h"
+#include "ZombieGameInstance.h"
+#include "Engine/World.h"
 
 
 // Sets default values
@@ -35,6 +38,11 @@ void APlayerFPSCharacter::BeginPlay()
 {
 	Super::BeginPlay();	
     BaseWalkSpeed = GetCharacterMovement()->MaxWalkSpeed;
+
+    if (Health)
+    {
+        Health->OnDeath.AddDynamic(this, &APlayerFPSCharacter::HandlePlayerDeath);
+    }
 }
 
 // Called to bind functionality to input
@@ -118,7 +126,7 @@ void APlayerFPSCharacter::ToggleMenu()
     if (MenuWidget->IsInViewport())
     {
         MenuWidget->RemoveFromParent();
-
+        StopMenuUpdates();
         PC->SetInputMode(FInputModeGameOnly());
         PC->bShowMouseCursor = false;
 
@@ -131,6 +139,7 @@ void APlayerFPSCharacter::ToggleMenu()
     // OPEN menu
     MenuWidget->AddToViewport();
     UpdateMenuUI();
+    StartMenuUpdates();
 
     FInputModeGameAndUI InputMode;
     InputMode.SetHideCursorDuringCapture(true);
@@ -150,14 +159,19 @@ void APlayerFPSCharacter::UpdateMenuUI()
 {
     if (!MenuWidget) return;
 
-    // assuming your player has a HealthComponentNew called Health
     if (Health)
     {
         MenuWidget->SetHealth(Health->CurrentHealth, Health->MaxHealth);
     }
 
     MenuWidget->SetObjectiveText(FText::FromString(TEXT("Objective: Collect 5 items and escape")));
+
+    if (UZombieGameInstance* GI = GetGameInstance<UZombieGameInstance>())
+    {
+        MenuWidget->SetCollectiblesText(GI->GetCollectedCount(), GI->GetRequiredCollectibles());
+    }
 }
+
 
 float APlayerFPSCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent,
     AController* EventInstigator, AActor* DamageCauser)
@@ -221,4 +235,42 @@ FText APlayerFPSCharacter::GetActiveAbilityText() const
         return FText::FromString(TEXT("Speed Boost"));
 
     return FText::FromString(TEXT("None"));
+}
+
+void APlayerFPSCharacter::StartMenuUpdates()
+{
+    UpdateMenuUI();
+
+    GetWorldTimerManager().SetTimer(
+        MenuUpdateTimer,
+        this,
+        &APlayerFPSCharacter::UpdateMenuUI,
+        0.1f,
+        true
+    );
+}
+
+void APlayerFPSCharacter::StopMenuUpdates()
+{
+    GetWorldTimerManager().ClearTimer(MenuUpdateTimer);
+}
+
+
+void APlayerFPSCharacter::HandlePlayerDeath()
+{
+    // Optional: prevent input / spam
+    if (APlayerController* PC = Cast<APlayerController>(GetController()))
+    {
+        PC->SetIgnoreMoveInput(true);
+        PC->SetIgnoreLookInput(true);
+    }
+
+    if (UZombieGameInstance* GI = Cast<UZombieGameInstance>(GetGameInstance()))
+    {
+        GI->ResetProgress();
+    }
+
+    // Reload current level
+    const FName CurrentLevel = FName(*GetWorld()->GetName());
+    UGameplayStatics::OpenLevel(this, CurrentLevel);
 }

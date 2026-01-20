@@ -4,7 +4,7 @@
 #include "GameFramework/GameModeBase.h"
 #include "SilentVillageGameMode.generated.h"
 
-UCLASS(abstract)
+UCLASS()
 class SILENTVILLAGE_API ASilentVillageGameMode : public AGameModeBase
 {
 	GENERATED_BODY()

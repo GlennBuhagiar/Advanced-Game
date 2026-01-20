@@ -19,6 +19,11 @@ public:
     UFUNCTION(BlueprintCallable, Category = "UI")
     void SetObjectiveText(const FText& NewText);
 
+    UFUNCTION(BlueprintCallable, Category = "UI")
+    void SetCollectiblesText(int32 Current, int32 Required);
+
+    
+
 protected:
 
     UPROPERTY(meta = (BindWidget))
@@ -26,4 +31,7 @@ protected:
 
     UPROPERTY(meta = (BindWidget))
     class UTextBlock* ObjectiveText;
+
+    UPROPERTY(meta = (BindWidget))
+    class UTextBlock* CollectiblesText;
 };

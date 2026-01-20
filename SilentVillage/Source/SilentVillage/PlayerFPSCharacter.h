@@ -23,6 +23,10 @@ public:
     UFUNCTION(BlueprintCallable, Category = "Ability")
     FText GetActiveAbilityText() const;
 
+    UFUNCTION()
+    void HandlePlayerDeath();
+
+
 protected:
     virtual void BeginPlay() override;
     virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
@@ -61,6 +65,11 @@ private:
     float SpeedBoostMultiplier = 1.0f;
 
     FTimerHandle AbilityTimerHandle;
+
+    FTimerHandle MenuUpdateTimer;
+
+    void StartMenuUpdates();
+    void StopMenuUpdates();
 
 private:
 

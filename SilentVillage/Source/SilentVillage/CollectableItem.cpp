@@ -2,9 +2,8 @@
 #include "Components/SphereComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Kismet/GameplayStatics.h"
-#include "SilentVillageGameMode.h"
 #include "GameFramework/Pawn.h"
-
+#include "ZombieGameInstance.h"
 
 // Sets default values
 ACollectableItem::ACollectableItem()
@@ -32,12 +31,16 @@ void ACollectableItem::OnOverlap(UPrimitiveComponent* OverlappedComp, AActor* Ot
 	APawn* PlayerPawn = UGameplayStatics::GetPlayerPawn(this, 0);
 	if (OtherActor != PlayerPawn) return;
 
-	if (ASilentVillageGameMode* GM = Cast<ASilentVillageGameMode>(UGameplayStatics::GetGameMode(this)))
+	if (UZombieGameInstance* GI = GetGameInstance<UZombieGameInstance>())
 	{
-		GM->AddCollectible(Value);
+		GI->AddCollectible(Value);
 
 		UE_LOG(LogTemp, Warning, TEXT("Collectible picked: %d/%d"),
-			GM->GetCollectedCount(), GM->GetRequiredCollectibles());
+			GI->GetCollectedCount(), GI->GetRequiredCollectibles());
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("GameInstance is not UZombieGameInstance. Check Project Settings -> Game Instance Class."));
 	}
 
 	Destroy();

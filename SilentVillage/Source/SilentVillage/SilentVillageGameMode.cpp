@@ -31,3 +31,4 @@ void ASilentVillageGameMode::CheckWin()
 		UE_LOG(LogTemp, Warning, TEXT("NextLevelName is NONE. Set it in GameMode defaults."));
 	}
 }
+
