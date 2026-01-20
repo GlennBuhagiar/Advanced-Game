@@ -85,13 +85,7 @@ void AZombieAIController::GatherPatrolPoints()
         }
     }
 
-    // optional: stable order
-    PatrolPoints.Sort([](const AAIPatrolPoint& A, const AAIPatrolPoint& B)
-        {
-            return A.GetName() < B.GetName();
-        });
-
-    PatrolIndex = 0;
+    PatrolIndex = (PatrolPoints.Num() > 0) ? FMath::RandRange(0, PatrolPoints.Num() - 1) : 0;
     bHasPatrolMove = false;
 }
 

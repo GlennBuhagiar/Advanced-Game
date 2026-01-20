@@ -8,6 +8,7 @@
 
 class UHealthComponentNew;
 class UAnimMontage;
+class ARewardPickUp;
 
 UCLASS()
 class SILENTVILLAGE_API AZombieCharacter : public ACharacter
@@ -44,10 +45,17 @@ public:
 	UPROPERTY(BlueprintReadOnly, Category = "Zombie", meta = (AllowPrivateAccess = "true"))
 	bool bIsDead = false;
 
-	UPROPERTY(EditAnywhere, Category = "Zombie|Rewards")
-	TSubclassOf<class ARewardPickUp> RewardClass;
+	UPROPERTY(EditAnywhere, Category = "Zombie|Drops")
+	TSubclassOf<ARewardPickUp> HealthPickupClass;
+
+	UPROPERTY(EditAnywhere, Category = "Zombie|Drops")
+	TSubclassOf<ARewardPickUp> AbilityPickupClass;
+
+	UPROPERTY(EditAnywhere, Category = "Zombie|Drops")
+	float AbilityDropChance = 0.35f; // 35% chance
 
 	bool bCanAttack = true;
+
 
 protected:
 	// Called when the game starts or when spawned

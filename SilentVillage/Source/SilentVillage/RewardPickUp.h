@@ -39,13 +39,13 @@ protected:
     ERewardType RewardType = ERewardType::Collectible;
 
     UPROPERTY(EditAnywhere, Category = "Reward")
-    int32 Amount = 1;
+    int32 Amount = 5; //Health Amount
 
     UPROPERTY(EditAnywhere, Category = "Reward|Ability")
-    float AbilityDuration = 5.f;
+    float AbilityDuration = 4.3f;
 
     UPROPERTY(EditAnywhere, Category = "Reward|Ability")
-    float SpeedMultiplier = 1.5f;
+    float SpeedMultiplier = 1.9f;
 
 
     UFUNCTION()

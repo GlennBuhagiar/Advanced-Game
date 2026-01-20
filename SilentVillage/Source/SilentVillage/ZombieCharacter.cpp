@@ -16,7 +16,6 @@
 // Sets default values
 AZombieCharacter::AZombieCharacter()
 {
- 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = false;
 
 	Health = CreateDefaultSubobject<UHealthComponentNew>(TEXT("HealthComponentNew"));
@@ -58,23 +57,38 @@ void AZombieCharacter::HandleDeath()
 {
 	if (bIsDead) return;
 	bIsDead = true;
-    
-    //Spawning Reward
-    if (RewardClass)
+
+    if (USkeletalMeshComponent* SkelMesh = GetMesh())
     {
-        const FVector SpawnLoc = GetActorLocation() + FVector(0, 0, 40.f);
+        if (UAnimInstance* AnimInst = SkelMesh->GetAnimInstance())
+        {
+            AnimInst->StopAllMontages(0.0f); //Stopping all not just attack
+        }
+    }
+    //Spawning Reward w/offset
+    const FVector BaseLoc = GetActorLocation() + FVector(0, 0, 40.f);
 
-        FActorSpawnParameters Params;
-        Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+    FActorSpawnParameters Params;
+    Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
-        ARewardPickUp* Spawned = GetWorld()->SpawnActor<ARewardPickUp>(RewardClass, SpawnLoc, FRotator::ZeroRotator, Params);
-
-        UE_LOG(LogTemp, Warning, TEXT("Reward spawn attempt: %s"),
-            Spawned ? TEXT("SUCCESS") : TEXT("FAILED"));
+    // Always have a Health drop
+    if (HealthPickupClass)
+    {
+        GetWorld()->SpawnActor<ARewardPickUp>(HealthPickupClass, BaseLoc + FVector(30.f, 0.f, 0.f), FRotator::ZeroRotator, Params);
     }
     else
     {
-        UE_LOG(LogTemp, Warning, TEXT("RewardClass is NULL on this zombie!"));
+        UE_LOG(LogTemp, Warning, TEXT("HealthPickupClass is null on this zombie!"));
+    }
+
+    //Chance of spawning Ability drop
+    if (AbilityPickupClass && FMath::FRand() <= AbilityDropChance)
+    {
+        GetWorld()->SpawnActor<ARewardPickUp>(AbilityPickupClass, BaseLoc + FVector(-30.f, 0.f, 0.f), FRotator::ZeroRotator, Params);
+    }
+    else if (!AbilityPickupClass)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("AbilityPickupClass is null on this zombie!"));
     }
 
 
@@ -163,6 +177,7 @@ void AZombieCharacter::DealDamage()
 
     // Apply damage to player
     UGameplayStatics::ApplyDamage(PlayerPawn, AttackDamage, GetController(), this, nullptr);
+
     //DrawDebugSphere(GetWorld(), GetActorLocation() + GetActorForwardVector()*80.f, AttackRadius, 16, FColor::Red, false, 0.2f);
 }
 
