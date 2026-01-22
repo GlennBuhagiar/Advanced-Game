@@ -1,5 +1,5 @@
 #include "PlayerProjectile.h"
-
+#include "PlayerFPSCharacter.h"
 #include "Components/SphereComponent.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
@@ -45,13 +45,23 @@ void APlayerProjectile::OnProjectileHit(UPrimitiveComponent* HitComp, AActor* Ot
         return;
     }
 
+    float FinalDamage = Damage;
+
+    // Try to get the player who fired the projectile
+    APlayerFPSCharacter* Player = Cast<APlayerFPSCharacter>(MyOwner);
+    if (Player)
+    {
+        FinalDamage *= Player->GetDamageMultiplier();
+    }
+
     UGameplayStatics::ApplyDamage(
         OtherActor,
-        Damage,
+        FinalDamage,
         MyOwner ? MyOwner->GetInstigatorController() : nullptr,
         this,
         UDamageType::StaticClass()
     );
+
 
     Destroy();
 }

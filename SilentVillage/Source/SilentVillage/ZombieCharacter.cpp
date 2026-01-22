@@ -55,6 +55,16 @@ float AZombieCharacter::TakeDamage(float DamageAmount, FDamageEvent const& Damag
 
 void AZombieCharacter::HandleDeath()
 {
+
+    if (UZombieGameInstance* GI = GetGameInstance<UZombieGameInstance>())
+    {
+        if (GI->CurrentObjective == ELevelObjectiveType::KillZombies)
+        {
+            GI->AddZombieKill();
+        }
+    }
+
+
 	if (bIsDead) return;
 	bIsDead = true;
 
@@ -89,6 +99,28 @@ void AZombieCharacter::HandleDeath()
     else if (!AbilityPickupClass)
     {
         UE_LOG(LogTemp, Warning, TEXT("AbilityPickupClass is null on this zombie!"));
+    }
+
+    // Chance of spawning Invulnerability ability
+    if (InvulnerabilityPickupClass && FMath::FRand() <= InvulnerabilityDropChance)
+    {
+        GetWorld()->SpawnActor<ARewardPickUp>(
+            InvulnerabilityPickupClass,
+            BaseLoc + FVector(0.f, 30.f, 0.f),
+            FRotator::ZeroRotator,
+            Params
+        );
+    }
+
+    // Chance of spawning Double Damage ability
+    if (DoubleDamagePickupClass && FMath::FRand() <= DoubleDamageDropChance)
+    {
+        GetWorld()->SpawnActor<ARewardPickUp>(
+            DoubleDamagePickupClass,
+            BaseLoc + FVector(30.f, 0.f, 0.f),
+            FRotator::ZeroRotator,
+            Params
+        );
     }
 
 
@@ -127,13 +159,19 @@ void AZombieCharacter::StartAttack()
 {
     if (bIsDead || !bCanAttack || !AttackMontage) return;
 
+    APawn* PlayerPawn = UGameplayStatics::GetPlayerPawn(GetWorld(), 0);
+    APlayerFPSCharacter* Player = Cast<APlayerFPSCharacter>(PlayerPawn);
+
+    
+
+
     UAnimInstance* AnimInst = GetMesh() ? GetMesh()->GetAnimInstance() : nullptr;
     if (!AnimInst) return;
 
     // if montage is already playing, does not restrat it
     if (AnimInst->Montage_IsPlaying(AttackMontage)) return;
 
-    APawn* PlayerPawn = UGameplayStatics::GetPlayerPawn(GetWorld(), 0);
+    
     if (!PlayerPawn) return;
 
     const float Dist = FVector::Dist(PlayerPawn->GetActorLocation(), GetActorLocation());
@@ -162,10 +200,22 @@ void AZombieCharacter::ResetAttack()
 
 void AZombieCharacter::DealDamage()
 {
+    
+       
+    UE_LOG(LogTemp, Display, TEXT("Zombie DealDamage() CALLED"));
+
+
     if (bIsDead) return;
 
     APawn* PlayerPawn = UGameplayStatics::GetPlayerPawn(GetWorld(), 0);
     if (!PlayerPawn) return;
+
+    APlayerFPSCharacter* Player = Cast<APlayerFPSCharacter>(PlayerPawn);
+    if (Player && Player->IsInvulnerable())
+    {
+        UE_LOG(LogTemp, Display, TEXT("Zombie ignored attack (player invisible)"));
+        return;
+    }
 
     // Check if player is still close enough at the hit frame
     const float Dist = FVector::Dist(PlayerPawn->GetActorLocation(), GetActorLocation());

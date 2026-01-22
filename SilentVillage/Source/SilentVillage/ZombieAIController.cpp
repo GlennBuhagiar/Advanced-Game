@@ -1,7 +1,8 @@
 #include "ZombieAIController.h"
+#include "BrainComponent.h"
 #include "AIPatrolPoint.h"
 #include "ZombieCharacter.h"
-
+#include "PlayerFPSCharacter.h"
 #include "Kismet/GameplayStatics.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -31,9 +32,40 @@ void AZombieAIController::Tick(float DeltaSeconds)
         PlayerChar = Cast<ACharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
     }
 
-    if (!PlayerChar || !ControlledPawn) return;
+    
+    if (APlayerFPSCharacter* Player = Cast<APlayerFPSCharacter>(PlayerChar))
+    {
+        if (Player->IsInvulnerable())
+        {
+            StopMovement();
+
+            if (BrainComponent)
+            {
+                BrainComponent->StopLogic(TEXT("Player Invulnerable"));
+            }
+
+            return; 
+        }
+        else
+        {
+            
+            if (BrainComponent && BrainComponent->IsPaused())
+            {
+                BrainComponent->RestartLogic();
+            }
+        }
+    }
 
     const float D = DistToPlayer();
+
+    APlayerFPSCharacter* Player = Cast<APlayerFPSCharacter>(PlayerChar);
+    if (Player && Player->IsInvulnerable())
+    {
+        SetState(EZombieState::Patrol);
+        StopMovement();
+        return;
+    }
+
 
     if (State == EZombieState::Patrol)
     {

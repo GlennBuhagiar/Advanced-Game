@@ -54,6 +54,18 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Zombie|Drops")
 	float AbilityDropChance = 0.35f; // 35% chance
 
+	UPROPERTY(EditAnywhere, Category = "Zombie|Drops")
+	TSubclassOf<ARewardPickUp> InvulnerabilityPickupClass;
+
+	UPROPERTY(EditAnywhere, Category = "Zombie|Drops")
+	TSubclassOf<ARewardPickUp> DoubleDamagePickupClass;
+
+	UPROPERTY(EditAnywhere, Category = "Zombie|Drops")
+	float InvulnerabilityDropChance = 0.25f; // 25%
+
+	UPROPERTY(EditAnywhere, Category = "Zombie|Drops")
+	float DoubleDamageDropChance = 0.20f; // 20%
+
 	bool bCanAttack = true;
 
 

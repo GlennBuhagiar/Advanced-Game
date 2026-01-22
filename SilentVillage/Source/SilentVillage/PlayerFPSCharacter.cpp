@@ -33,17 +33,23 @@ APlayerFPSCharacter::APlayerFPSCharacter()
 
 }
 
-// Called when the game starts or when spawned
 void APlayerFPSCharacter::BeginPlay()
 {
-	Super::BeginPlay();	
-    BaseWalkSpeed = GetCharacterMovement()->MaxWalkSpeed;
+    Super::BeginPlay();
 
-    if (Health)
+    if (!GetWorld()) return;
+
+    const FString LevelName = GetWorld()->GetName();
+
+    
+
+    if (LevelName.Contains(TEXT("Level2")) && Level2MenuWidgetClass)
     {
-        Health->OnDeath.AddDynamic(this, &APlayerFPSCharacter::HandlePlayerDeath);
+        MenuWidgetClass = Level2MenuWidgetClass;
     }
 }
+
+
 
 // Called to bind functionality to input
 void APlayerFPSCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -111,10 +117,14 @@ void APlayerFPSCharacter::ResetFire()
 
 void APlayerFPSCharacter::ToggleMenu()
 {
-    if (!MenuWidget && MenuWidgetClass)
+    // CREATE widget ONCE
+    if (!MenuWidget)
     {
-        MenuWidget = CreateWidget<UPlayerGameMenuWidget>(GetWorld(), MenuWidgetClass);
-        UpdateMenuUI();
+        if (MenuWidgetClass)
+        {
+            MenuWidget = CreateWidget<UPlayerGameMenuWidget>(GetWorld(), MenuWidgetClass);
+            UpdateMenuUI();
+        }
     }
 
     if (!MenuWidget) return;
@@ -122,21 +132,23 @@ void APlayerFPSCharacter::ToggleMenu()
     APlayerController* PC = Cast<APlayerController>(GetController());
     if (!PC) return;
 
-    // CLOSE menu
+    
+    // CLOSE MENU
     if (MenuWidget->IsInViewport())
     {
         MenuWidget->RemoveFromParent();
         StopMenuUpdates();
+
         PC->SetInputMode(FInputModeGameOnly());
         PC->bShowMouseCursor = false;
 
         PC->SetIgnoreMoveInput(false);
         PC->SetIgnoreLookInput(false);
-
         return;
     }
 
-    // OPEN menu
+    
+    // OPEN MENU
     MenuWidget->AddToViewport();
     UpdateMenuUI();
     StartMenuUpdates();
@@ -148,7 +160,6 @@ void APlayerFPSCharacter::ToggleMenu()
     PC->SetInputMode(InputMode);
     PC->bShowMouseCursor = false;
 
-    //Disable Player Controller
     PC->SetIgnoreMoveInput(true);
     PC->SetIgnoreLookInput(true);
 }
@@ -164,11 +175,39 @@ void APlayerFPSCharacter::UpdateMenuUI()
         MenuWidget->SetHealth(Health->CurrentHealth, Health->MaxHealth);
     }
 
-    MenuWidget->SetObjectiveText(FText::FromString(TEXT("Objective: Collect 5 items and escape")));
+    
 
     if (UZombieGameInstance* GI = GetGameInstance<UZombieGameInstance>())
     {
-        MenuWidget->SetCollectiblesText(GI->GetCollectedCount(), GI->GetRequiredCollectibles());
+        if (GI->CurrentObjective == ELevelObjectiveType::CollectItems)
+        {
+            
+                MenuWidget->SetObjectiveText(
+                    FText::FromString(TEXT("Objective: Collect 5 items and escape"))
+                );
+            
+            MenuWidget->SetObjectiveText(
+                FText::FromString(
+                    FString::Printf(
+                        TEXT("Objective: Collect %d / %d items"),
+                        GI->GetCollectedCount(),
+                        GI->GetRequiredCollectibles()
+                    )
+                )
+            );
+        }
+        else if (GI->CurrentObjective == ELevelObjectiveType::KillZombies)
+        {
+            MenuWidget->SetObjectiveText(
+                FText::FromString(
+                    FString::Printf(
+                        TEXT("Objective: Kill %d / %d Zombies"),
+                        GI->ZombiesKilled,
+                        GI->RequiredZombieKills
+                    )
+                )
+            );
+        }
     }
 }
 
@@ -176,9 +215,22 @@ void APlayerFPSCharacter::UpdateMenuUI()
 float APlayerFPSCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent,
     AController* EventInstigator, AActor* DamageCauser)
 {
+    if (bInvulnerableActive)
+    {
+        UE_LOG(LogTemp, Display, TEXT("Damage blocked (Invulnerability Active)"));
+        return 0.f;
+    }
+
+
     const float ActualDamage = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
 
     const float UsedDamage = (ActualDamage > 0.f) ? ActualDamage : DamageAmount;
+
+    if (bInvulnerableActive)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("Player is Invulnerable - damage ignored"));
+        return 0.f;
+    }
 
     if (Health && UsedDamage > 0.f && Health->CurrentHealth > 0.f)
     {
@@ -249,6 +301,75 @@ void APlayerFPSCharacter::StartMenuUpdates()
         true
     );
 }
+
+void APlayerFPSCharacter::ActivateDoubleDamage(float Multiplier, float Duration)
+{
+    if (Multiplier <= 1.f) return;
+
+    bDoubleDamageActive = true;
+    DamageMultiplier = Multiplier;
+
+    GetWorldTimerManager().ClearTimer(AbilityTimerHandle);
+    GetWorldTimerManager().SetTimer(
+        AbilityTimerHandle,
+        this,
+        &APlayerFPSCharacter::EndDoubleDamage,
+        Duration,
+        false
+    );
+
+    UpdateMenuUI();
+    UE_LOG(LogTemp, Warning, TEXT("DOUBLE DAMAGE ACTIVATED | Multiplier = %.2f"), DamageMultiplier);
+
+}
+
+void APlayerFPSCharacter::EndDoubleDamage()
+{
+    bDoubleDamageActive = false;
+    DamageMultiplier = 1.0f;
+    UpdateMenuUI();
+}
+
+void APlayerFPSCharacter::ActivateInvulnerability(float Duration)
+{
+    
+    bInvulnerableActive = true;
+
+    if (Health)
+    {
+        Health->bDamageBlocked = true;
+    }
+
+    GetMesh()->SetVisibility(false, true);
+
+    GetWorldTimerManager().ClearTimer(AbilityTimerHandle);
+    GetWorldTimerManager().SetTimer(
+        AbilityTimerHandle,
+        this,
+        &APlayerFPSCharacter::EndInvulnerability,
+        Duration,
+        false
+    );
+
+    UE_LOG(LogTemp, Warning, TEXT("INVULNERABILITY ACTIVATED"));
+}
+
+
+
+void APlayerFPSCharacter::EndInvulnerability()
+{
+    bInvulnerableActive = false;
+
+    if (Health)
+    {
+        Health->bDamageBlocked = false;
+    }
+
+    GetMesh()->SetVisibility(true, true);
+
+    UE_LOG(LogTemp, Warning, TEXT("INVULNERABILITY ENDED"));
+}
+
 
 void APlayerFPSCharacter::StopMenuUpdates()
 {

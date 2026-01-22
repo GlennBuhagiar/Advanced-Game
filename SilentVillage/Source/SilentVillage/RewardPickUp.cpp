@@ -29,6 +29,10 @@ ARewardPickUp::ARewardPickUp()
 
 void ARewardPickUp::OnOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
+
+    UE_LOG(LogTemp, Warning, TEXT("RewardPickUp OVERLAP TRIGGERED"));
+
+
     APawn* PlayerPawn = UGameplayStatics::GetPlayerPawn(GetWorld(), 0);
     if (OtherActor != PlayerPawn) return;
 
@@ -48,10 +52,27 @@ void ARewardPickUp::OnOverlap(UPrimitiveComponent* OverlappedComp, AActor* Other
     case ERewardType::Ability:
         if (Player)
         {
-            Player->ActivateSpeedBoost(SpeedMultiplier, AbilityDuration);
-            UE_LOG(LogTemp, Warning, TEXT("Ability picked up: Speed Boost"));
+            switch (AbilityType)
+            {
+            case EAbilityType::Speed:
+                Player->ActivateSpeedBoost(SpeedMultiplier, AbilityDuration);
+                UE_LOG(LogTemp, Warning, TEXT("Ability picked up: Speed Boost"));
+                break;
+
+            case EAbilityType::DoubleDamage:
+                Player->ActivateDoubleDamage(SpeedMultiplier, AbilityDuration);
+                UE_LOG(LogTemp, Warning, TEXT("Ability picked up: Double Damage"));
+                break;
+
+            case EAbilityType::Invulnerability:
+                Player->ActivateInvulnerability(AbilityDuration); 
+                UE_LOG(LogTemp, Warning, TEXT("Ability picked up: Invulnerability"));
+                break;
+
+            }
         }
         break;
+
 
     case ERewardType::Ammo:
         //Maybe add later on

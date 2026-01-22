@@ -17,6 +17,14 @@ enum class ERewardType : uint8
     Ability
 };
 
+UENUM(BlueprintType)
+enum class EAbilityType : uint8
+{
+    Speed,
+    DoubleDamage,
+	Invulnerability
+};
+
 struct FHitResult;
 
 UCLASS(Blueprintable)
@@ -46,6 +54,9 @@ protected:
 
     UPROPERTY(EditAnywhere, Category = "Reward|Ability")
     float SpeedMultiplier = 1.9f;
+
+    UPROPERTY(EditAnywhere, Category = "Reward|Ability")
+    EAbilityType AbilityType = EAbilityType::Speed;
 
 
     UFUNCTION()

@@ -29,6 +29,9 @@ public:
     UPROPERTY(BlueprintAssignable, Category = "Health")
     FOnDeath OnDeath;
 
+    UPROPERTY(BlueprintReadWrite, Category = "Health")
+    bool bDamageBlocked = false;
+
 protected:
     virtual void BeginPlay() override;
 };

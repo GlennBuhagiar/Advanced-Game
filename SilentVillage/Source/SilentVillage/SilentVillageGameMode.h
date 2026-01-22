@@ -12,6 +12,9 @@ class SILENTVILLAGE_API ASilentVillageGameMode : public AGameModeBase
 public:
 	ASilentVillageGameMode();
 
+	virtual void BeginPlay() override;
+
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Progress")
 	int32 RequiredCollectibles = 5;
 

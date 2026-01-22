@@ -26,6 +26,16 @@ public:
     UFUNCTION()
     void HandlePlayerDeath();
 
+    UFUNCTION(BlueprintCallable, Category = "Ability")
+    void ActivateDoubleDamage(float Multiplier, float Duration);
+
+    UFUNCTION(BlueprintCallable, Category = "Ability")
+    void ActivateInvulnerability(float Duration);
+
+    bool IsInvulnerable() const { return bInvulnerableActive; }
+
+    float GetDamageMultiplier() const { return DamageMultiplier; }
+
 
 protected:
     virtual void BeginPlay() override;
@@ -56,6 +66,10 @@ private:
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
     TSubclassOf<UPlayerGameMenuWidget> MenuWidgetClass;
 
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
+    TSubclassOf<UPlayerGameMenuWidget> Level2MenuWidgetClass;
+
+
     UPROPERTY()
     UPlayerGameMenuWidget* MenuWidget = nullptr;
 
@@ -85,4 +99,17 @@ private:
     void UpdateMenuUI();
 
     void EndSpeedBoost();
+
+    void EndDoubleDamage();
+    void EndInvulnerability();
+
+   
+
+    // Damage boost
+    bool bDoubleDamageActive = false;
+    float DamageMultiplier = 1.0f;
+
+	// Invunerability
+    bool bInvulnerableActive = false;
+
 };

@@ -1,10 +1,32 @@
 #include "SilentVillageGameMode.h"
 #include "Kismet/GameplayStatics.h"
+#include "ZombieGameInstance.h"
 
 ASilentVillageGameMode::ASilentVillageGameMode()
 {
 	// stub
 }
+
+void ASilentVillageGameMode::BeginPlay()
+{
+	Super::BeginPlay();
+
+	if (UZombieGameInstance* GI = GetGameInstance<UZombieGameInstance>())
+	{
+		const FString LevelName = GetWorld()->GetName();
+
+		if (LevelName.Contains(TEXT("First")))
+		{
+			GI->CurrentObjective = ELevelObjectiveType::CollectItems;
+		}
+		else if (LevelName.Contains(TEXT("Level2")))
+		{
+			GI->CurrentObjective = ELevelObjectiveType::KillZombies;
+			GI->ZombiesKilled = 0; // reset for this level
+		}
+	}
+}
+
 
 void ASilentVillageGameMode::AddCollectible(int32 Amount)
 {
