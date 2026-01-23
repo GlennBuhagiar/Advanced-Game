@@ -10,8 +10,11 @@ class SILENTVILLAGE_API UInventoryComponent : public UActorComponent
     GENERATED_BODY()
 
 public:
+    /*
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
     TArray<ABaseItem*> Items;
 
     void AddItem(ABaseItem* Item);
+    */
+    
 };

@@ -19,10 +19,11 @@ void ASilentVillageGameMode::BeginPlay()
 		{
 			GI->CurrentObjective = ELevelObjectiveType::CollectItems;
 		}
-		else if (LevelName.Contains(TEXT("Level2")))
+		else if (LevelName.Contains(TEXT("Lvl_Level2")))
 		{
 			GI->CurrentObjective = ELevelObjectiveType::KillZombies;
-			GI->ZombiesKilled = 0; // reset for this level
+			GI->RequiredZombieKills = 20;
+			GI->ZombiesKilled = 0;
 		}
 	}
 }

@@ -16,7 +16,7 @@ void UPlayerGameMenuWidget::SetObjectiveText(const FText& NewText)
     ObjectiveText->SetText(NewText);
 }
 
-void UPlayerGameMenuWidget::SetCollectiblesText(int32 Current, int32 Required)
+void UPlayerGameMenuWidget::SetProgressText(int32 Current, int32 Required, const FString& Label)
 {
     if (!CollectiblesText)
     {
@@ -24,7 +24,7 @@ void UPlayerGameMenuWidget::SetCollectiblesText(int32 Current, int32 Required)
         return;
     }
 
-    const FString Str = FString::Printf(TEXT("Collected %d / %d"), Current, Required);
+    const FString Str = FString::Printf(TEXT("%d/%d %s"), Current, Required, *Label);
     CollectiblesText->SetText(FText::FromString(Str));
 }
 

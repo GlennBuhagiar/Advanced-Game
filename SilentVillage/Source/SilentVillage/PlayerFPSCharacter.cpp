@@ -37,13 +37,17 @@ void APlayerFPSCharacter::BeginPlay()
 {
     Super::BeginPlay();
 
+    BaseWalkSpeed = GetCharacterMovement()->MaxWalkSpeed;
+
+    if (Health)
+    {
+        Health->OnDeath.AddDynamic(this, &APlayerFPSCharacter::HandlePlayerDeath);
+    }
+
     if (!GetWorld()) return;
 
     const FString LevelName = GetWorld()->GetName();
-
-    
-
-    if (LevelName.Contains(TEXT("Level2")) && Level2MenuWidgetClass)
+    if (LevelName.Contains(TEXT("Lvl_Level2")) && Level2MenuWidgetClass)
     {
         MenuWidgetClass = Level2MenuWidgetClass;
     }
@@ -175,38 +179,19 @@ void APlayerFPSCharacter::UpdateMenuUI()
         MenuWidget->SetHealth(Health->CurrentHealth, Health->MaxHealth);
     }
 
-    
-
     if (UZombieGameInstance* GI = GetGameInstance<UZombieGameInstance>())
     {
         if (GI->CurrentObjective == ELevelObjectiveType::CollectItems)
         {
-            
-                MenuWidget->SetObjectiveText(
-                    FText::FromString(TEXT("Objective: Collect 5 items and escape"))
-                );
-            
-            MenuWidget->SetObjectiveText(
-                FText::FromString(
-                    FString::Printf(
-                        TEXT("Objective: Collect %d / %d items"),
-                        GI->GetCollectedCount(),
-                        GI->GetRequiredCollectibles()
-                    )
-                )
-            );
+            //Level 1 Objectives
+            MenuWidget->SetObjectiveText(FText::FromString(FString::Printf(TEXT("Objective: Collect %d books"), GI->GetRequiredCollectibles())));
+            MenuWidget->SetProgressText(GI->GetCollectedCount(),GI->GetRequiredCollectibles(),TEXT("Books Collected"));
         }
         else if (GI->CurrentObjective == ELevelObjectiveType::KillZombies)
         {
-            MenuWidget->SetObjectiveText(
-                FText::FromString(
-                    FString::Printf(
-                        TEXT("Objective: Kill %d / %d Zombies"),
-                        GI->ZombiesKilled,
-                        GI->RequiredZombieKills
-                    )
-                )
-            );
+            //Level 2 Objectives
+            MenuWidget->SetObjectiveText(FText::FromString(FString::Printf(TEXT("Objective: Kill %d zombies"), GI->RequiredZombieKills)));
+            MenuWidget->SetProgressText(GI->ZombiesKilled, GI->RequiredZombieKills,TEXT("Zombies Killed"));
         }
     }
 }
@@ -260,13 +245,7 @@ void APlayerFPSCharacter::ActivateSpeedBoost(float Multiplier, float Duration)
     GetCharacterMovement()->MaxWalkSpeed = BaseWalkSpeed * SpeedBoostMultiplier;
 
     GetWorldTimerManager().ClearTimer(AbilityTimerHandle);
-    GetWorldTimerManager().SetTimer(
-        AbilityTimerHandle,
-        this,
-        &APlayerFPSCharacter::EndSpeedBoost,
-        Duration,
-        false
-    );
+    GetWorldTimerManager().SetTimer(AbilityTimerHandle, this, &APlayerFPSCharacter::EndSpeedBoost, Duration, false);
 
     UpdateMenuUI();
 }
@@ -293,13 +272,7 @@ void APlayerFPSCharacter::StartMenuUpdates()
 {
     UpdateMenuUI();
 
-    GetWorldTimerManager().SetTimer(
-        MenuUpdateTimer,
-        this,
-        &APlayerFPSCharacter::UpdateMenuUI,
-        0.1f,
-        true
-    );
+    GetWorldTimerManager().SetTimer(MenuUpdateTimer, this, &APlayerFPSCharacter::UpdateMenuUI, 0.1f, true);
 }
 
 void APlayerFPSCharacter::ActivateDoubleDamage(float Multiplier, float Duration)

@@ -1,6 +1,8 @@
 #include "InventoryComponent.h"
 #include "BaseItem.h"
 
+/*
+
 void UInventoryComponent::AddItem(ABaseItem* Item)
 {
     if (Item)
@@ -8,3 +10,4 @@ void UInventoryComponent::AddItem(ABaseItem* Item)
         Items.Add(Item);
     }
 }
+*/

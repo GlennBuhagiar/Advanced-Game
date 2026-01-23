@@ -20,7 +20,7 @@ public:
     void SetObjectiveText(const FText& NewText);
 
     UFUNCTION(BlueprintCallable, Category = "UI")
-    void SetCollectiblesText(int32 Current, int32 Required);
+    void SetProgressText(int32 Current, int32 Required, const FString& Label);
 
     
 
