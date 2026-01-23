@@ -24,6 +24,16 @@ public:
 	/** Constructor */
 	ASilentVillagePlayerController();
 
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UI")
+	TSubclassOf<UUserWidget> WinWidgetClass;
+
+	UFUNCTION(BlueprintCallable, Category = "UI")
+	void ShowWinScreen();
+
+	UFUNCTION(BlueprintCallable, Category = "Game")
+	void RestartWholeGame();
+
 protected:
 
 	/** Input Mapping Contexts */
@@ -47,4 +57,5 @@ protected:
 	/** Input mapping context setup */
 	virtual void SetupInputComponent() override;
 
+	
 };

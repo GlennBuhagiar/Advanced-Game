@@ -1,5 +1,6 @@
 #include "ZombieGameInstance.h"
 #include "Kismet/GameplayStatics.h"
+#include "SilentVillagePlayerController.h"
 
 
 void UZombieGameInstance::AddCollectible(int32 Amount)
@@ -19,7 +20,19 @@ void UZombieGameInstance::ResetProgress()
 
 void UZombieGameInstance::AddZombieKill()
 {
-	ZombiesKilled++;
+    ZombiesKilled++;
+
+    if (CurrentObjective == ELevelObjectiveType::KillZombies &&
+        ZombiesKilled >= RequiredZombieKills)
+    {
+        if (APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0))
+        {
+            if (ASilentVillagePlayerController* SVPC = Cast<ASilentVillagePlayerController>(PC))
+            {
+                SVPC->ShowWinScreen();
+            }
+        }
+    }
 }
 
 bool UZombieGameInstance::IsObjectiveComplete() const

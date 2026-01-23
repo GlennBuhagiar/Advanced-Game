@@ -9,6 +9,8 @@
 #include "Blueprint/UserWidget.h"
 #include "SilentVillage.h"
 #include "Widgets/Input/SVirtualJoystick.h"
+#include "Kismet/GameplayStatics.h"
+#include "ZombieGameInstance.h"
 
 ASilentVillagePlayerController::ASilentVillagePlayerController()
 {
@@ -67,4 +69,44 @@ void ASilentVillagePlayerController::SetupInputComponent()
 		}
 	}
 	
+}
+
+void ASilentVillagePlayerController::ShowWinScreen()
+{
+	if (!WinWidgetClass) return;
+
+	UUserWidget* WinWidget = CreateWidget<UUserWidget>(this, WinWidgetClass);
+	if (!WinWidget) return;
+
+	WinWidget->AddToViewport(999);
+
+	SetPause(true);
+
+	bShowMouseCursor = true;
+	SetInputMode(FInputModeUIOnly());
+
+	SetIgnoreMoveInput(true);
+	SetIgnoreLookInput(true);
+}
+
+void ASilentVillagePlayerController::RestartWholeGame()
+{
+	SetPause(false);
+
+	SetIgnoreMoveInput(false);
+	SetIgnoreLookInput(false);
+	bShowMouseCursor = false;
+
+	FInputModeGameOnly GameOnly;
+	SetInputMode(GameOnly);
+
+	// Clear progress
+	if (UZombieGameInstance* GI = GetGameInstance<UZombieGameInstance>())
+	{
+		GI->ResetProgress();
+		GI->ZombiesKilled = 0;
+		GI->CurrentObjective = ELevelObjectiveType::CollectItems;
+	}
+
+	UGameplayStatics::OpenLevel(this, FName(TEXT("Lvl_FirstPerson")));
 }
