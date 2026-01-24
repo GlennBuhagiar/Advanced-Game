@@ -51,6 +51,11 @@ void APlayerFPSCharacter::BeginPlay()
     {
         MenuWidgetClass = Level2MenuWidgetClass;
     }
+
+    if (RespawnSFX)
+    {
+        UGameplayStatics::PlaySound2D(this, RespawnSFX);
+    }
 }
 
 

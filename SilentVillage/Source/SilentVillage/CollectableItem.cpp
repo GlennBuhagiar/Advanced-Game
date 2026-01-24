@@ -35,6 +35,11 @@ void ACollectableItem::OnOverlap(UPrimitiveComponent* OverlappedComp, AActor* Ot
 	{
 		GI->AddCollectible(Value);
 
+		if (CollectableCollected)
+		{
+			UGameplayStatics::PlaySound2D(this, CollectableCollected);
+		}
+
 		UE_LOG(LogTemp, Warning, TEXT("Collectible picked: %d/%d"),
 			GI->GetCollectedCount(), GI->GetRequiredCollectibles());
 	}

@@ -24,6 +24,8 @@ public:
 	/** Constructor */
 	ASilentVillagePlayerController();
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Audio")
+	USoundBase* WinSFX;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UI")
 	TSubclassOf<UUserWidget> WinWidgetClass;
@@ -33,6 +35,7 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Game")
 	void RestartWholeGame();
+
 
 protected:
 

@@ -37,6 +37,11 @@ public:
     float GetDamageMultiplier() const { return DamageMultiplier; }
 
 
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Audio")
+    USoundBase* RespawnSFX;
+
+
+
 protected:
     virtual void BeginPlay() override;
     virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;

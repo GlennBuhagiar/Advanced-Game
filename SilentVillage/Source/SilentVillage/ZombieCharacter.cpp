@@ -10,7 +10,8 @@
 #include "TimerManager.h"
 #include "DrawDebugHelpers.h"
 #include "RewardPickUp.h"
-
+#include "ZombieGameInstance.h"
+#include "PlayerFPSCharacter.h"
 
 
 // Sets default values
@@ -37,6 +38,15 @@ void AZombieCharacter::BeginPlay()
     {
         Health->OnDeath.AddDynamic(this, &AZombieCharacter::HandleDeath);
     }
+
+    float FirstDelay = FMath::RandRange(1.f, 15.f);
+    GetWorldTimerManager().SetTimer(
+        IdleSoundTimer,
+        this,
+        &AZombieCharacter::PlayIdleSound,
+        FirstDelay,
+        false
+    );
 	
 }
 
@@ -55,6 +65,10 @@ float AZombieCharacter::TakeDamage(float DamageAmount, FDamageEvent const& Damag
 
 void AZombieCharacter::HandleDeath()
 {
+    if (ZombieDeathSFX)
+    {
+        UGameplayStatics::PlaySoundAtLocation(this, ZombieDeathSFX, GetActorLocation());
+    }
 
     if (UZombieGameInstance* GI = GetGameInstance<UZombieGameInstance>())
     {
@@ -162,8 +176,10 @@ void AZombieCharacter::StartAttack()
     APawn* PlayerPawn = UGameplayStatics::GetPlayerPawn(GetWorld(), 0);
     APlayerFPSCharacter* Player = Cast<APlayerFPSCharacter>(PlayerPawn);
 
-    
-
+    if (ZombieAttackSFX)
+    {
+        UGameplayStatics::PlaySoundAtLocation(this, ZombieAttackSFX, GetActorLocation());
+    }
 
     UAnimInstance* AnimInst = GetMesh() ? GetMesh()->GetAnimInstance() : nullptr;
     if (!AnimInst) return;
@@ -243,3 +259,19 @@ void AZombieCharacter::OnAttackMontageEnded(UAnimMontage* Montage, bool bInterru
 }
 
 
+void AZombieCharacter::PlayIdleSound()
+{
+    if (ZombieIdleSFX)
+    {
+        UGameplayStatics::PlaySoundAtLocation(this, ZombieIdleSFX, GetActorLocation());
+    }
+
+    float NextDelay = FMath::RandRange(1.f, 60.f);
+    GetWorldTimerManager().SetTimer(
+        IdleSoundTimer,
+        this,
+        &AZombieCharacter::PlayIdleSound,
+        NextDelay,
+        false
+    );
+}

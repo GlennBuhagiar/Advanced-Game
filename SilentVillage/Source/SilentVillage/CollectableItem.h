@@ -18,6 +18,9 @@ public:
 	// Sets default values for this actor's properties
 	ACollectableItem();
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Audio")
+	USoundBase* CollectableCollected;
+
 protected:
 	UPROPERTY(VisibleAnywhere)
 	USphereComponent* Sphere;

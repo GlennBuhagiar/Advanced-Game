@@ -4,6 +4,7 @@
 #include "Animation/AnimMontage.h"
 #include "Animation/AnimInstance.h"
 #include "GameFramework/Character.h"
+#include "TimerManager.h"
 #include "ZombieCharacter.generated.h"
 
 class UHealthComponentNew;
@@ -66,6 +67,20 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Zombie|Drops")
 	float DoubleDamageDropChance = 0.20f; // 20%
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Audio")
+	USoundBase* ZombieIdleSFX;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Audio")
+	USoundBase* ZombieAttackSFX;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Audio")
+	USoundBase* ZombieHurtSFX;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Audio")
+	USoundBase* ZombieDeathSFX;
+
+	FTimerHandle IdleSoundTimer;
+
 	bool bCanAttack = true;
 
 
@@ -82,6 +97,9 @@ private:
 
 	bool bIsAttacking = false;
 	FTimerHandle AttackCooldownHandle;
+
+	
+	void PlayIdleSound();
 
 	void ResetAttack();
 

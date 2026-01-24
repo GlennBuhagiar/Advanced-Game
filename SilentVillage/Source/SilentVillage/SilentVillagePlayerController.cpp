@@ -78,6 +78,11 @@ void ASilentVillagePlayerController::ShowWinScreen()
 	UUserWidget* WinWidget = CreateWidget<UUserWidget>(this, WinWidgetClass);
 	if (!WinWidget) return;
 
+	if (WinSFX)
+	{
+		UGameplayStatics::PlaySound2D(this, WinSFX);
+	}
+
 	WinWidget->AddToViewport(999);
 
 	SetPause(true);
