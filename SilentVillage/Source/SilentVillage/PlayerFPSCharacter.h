@@ -84,6 +84,10 @@ private:
     float SpeedBoostMultiplier = 1.0f;
 
     FTimerHandle AbilityTimerHandle;
+    FTimerHandle SpeedBoostTimerHandle;
+    FTimerHandle DoubleDamageTimerHandle;
+    FTimerHandle InvulnerabilityTimerHandle;
+
 
     FTimerHandle MenuUpdateTimer;
 

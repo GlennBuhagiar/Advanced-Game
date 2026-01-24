@@ -249,8 +249,8 @@ void APlayerFPSCharacter::ActivateSpeedBoost(float Multiplier, float Duration)
 
     GetCharacterMovement()->MaxWalkSpeed = BaseWalkSpeed * SpeedBoostMultiplier;
 
-    GetWorldTimerManager().ClearTimer(AbilityTimerHandle);
-    GetWorldTimerManager().SetTimer(AbilityTimerHandle, this, &APlayerFPSCharacter::EndSpeedBoost, Duration, false);
+    GetWorldTimerManager().ClearTimer(SpeedBoostTimerHandle);
+    GetWorldTimerManager().SetTimer(SpeedBoostTimerHandle, this, &APlayerFPSCharacter::EndSpeedBoost, Duration, false);
 
     UpdateMenuUI();
 }
@@ -287,9 +287,9 @@ void APlayerFPSCharacter::ActivateDoubleDamage(float Multiplier, float Duration)
     bDoubleDamageActive = true;
     DamageMultiplier = Multiplier;
 
-    GetWorldTimerManager().ClearTimer(AbilityTimerHandle);
+    GetWorldTimerManager().ClearTimer(DoubleDamageTimerHandle);
     GetWorldTimerManager().SetTimer(
-        AbilityTimerHandle,
+        DoubleDamageTimerHandle,
         this,
         &APlayerFPSCharacter::EndDoubleDamage,
         Duration,
@@ -320,9 +320,9 @@ void APlayerFPSCharacter::ActivateInvulnerability(float Duration)
 
     GetMesh()->SetVisibility(false, true);
 
-    GetWorldTimerManager().ClearTimer(AbilityTimerHandle);
+    GetWorldTimerManager().ClearTimer(InvulnerabilityTimerHandle);
     GetWorldTimerManager().SetTimer(
-        AbilityTimerHandle,
+        InvulnerabilityTimerHandle,
         this,
         &APlayerFPSCharacter::EndInvulnerability,
         Duration,
@@ -357,11 +357,20 @@ void APlayerFPSCharacter::StopMenuUpdates()
 
 void APlayerFPSCharacter::HandlePlayerDeath()
 {
-    // Optional: prevent input / spam
-    if (APlayerController* PC = Cast<APlayerController>(GetController()))
+    
+    APlayerController* PC = Cast<APlayerController>(GetController());
+    if (PC)
     {
-        PC->SetIgnoreMoveInput(true);
-        PC->SetIgnoreLookInput(true);
+        if (MenuWidget && MenuWidget->IsInViewport())
+        {
+            MenuWidget->RemoveFromParent();
+            StopMenuUpdates();
+        }
+
+        PC->SetIgnoreMoveInput(false);
+        PC->SetIgnoreLookInput(false);
+        PC->bShowMouseCursor = false;
+        PC->SetInputMode(FInputModeGameOnly());
     }
 
     if (UZombieGameInstance* GI = Cast<UZombieGameInstance>(GetGameInstance()))

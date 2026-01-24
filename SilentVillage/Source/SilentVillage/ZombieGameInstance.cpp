@@ -25,13 +25,23 @@ void UZombieGameInstance::AddZombieKill()
     if (CurrentObjective == ELevelObjectiveType::KillZombies &&
         ZombiesKilled >= RequiredZombieKills)
     {
-        if (APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0))
-        {
-            if (ASilentVillagePlayerController* SVPC = Cast<ASilentVillagePlayerController>(PC))
-            {
-                SVPC->ShowWinScreen();
-            }
-        }
+        FTimerHandle WinDelayHandle;
+
+        GetWorld()->GetTimerManager().SetTimer(
+            WinDelayHandle,
+            FTimerDelegate::CreateLambda([this]()
+                {
+                    if (APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0))
+                    {
+                        if (ASilentVillagePlayerController* SVPC = Cast<ASilentVillagePlayerController>(PC))
+                        {
+                            SVPC->ShowWinScreen();
+                        }
+                    }
+                }),
+            0.4f,
+            false
+        );
     }
 }
 
